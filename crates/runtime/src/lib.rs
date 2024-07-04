@@ -64,6 +64,8 @@ use starknet_api::transaction::{Calldata, Event as StarknetEvent, MessageToL1, T
 pub use types::*;
 // For `format!`
 extern crate alloc;
+pub use pallet_nostr;
+pub use pallet_balances;
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -74,6 +76,8 @@ construct_runtime!(
         Grandpa: pallet_grandpa,
         // Include Starknet pallet.
         Starknet: pallet_starknet,
+        Balances:pallet_balances,
+        Nostr:pallet_nostr
     }
 );
 

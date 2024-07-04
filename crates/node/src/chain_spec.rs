@@ -1,15 +1,17 @@
 use std::path::PathBuf;
 
-use madara_runtime::{AuraConfig, GrandpaConfig, RuntimeGenesisConfig, SealingMode, SystemConfig, WASM_BINARY};
+use madara_runtime::{AuraConfig, GrandpaConfig, RuntimeGenesisConfig, SealingMode, SystemConfig, WASM_BINARY, BalancesConfig};
 use mp_felt::Felt252Wrapper;
 use pallet_starknet::genesis_loader::{GenesisData, GenesisLoader, HexFelt};
 use sc_service::{BasePath, ChainType};
 use serde::{Deserialize, Serialize};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
-use sp_core::storage::Storage;
-use sp_core::{Pair, Public};
 use sp_state_machine::BasicExternalities;
+use sp_runtime::AccountId32;
+use sp_core::{sr25519, Pair, Public};
+use sp_core::storage::Storage;
+
 
 use crate::constants::DEV_CHAIN_ID;
 
@@ -186,5 +188,39 @@ fn testnet_genesis(
         },
         /// Starknet Genesis configuration.
         starknet: starknet_genesis_config,
+        balances: BalancesConfig {
+            // balances: get_endowed_accounts_with_balance()
+            // balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
+            balances: vec![
+                (get_account_id_from_seed::<sr25519::Public>("Alice"), 1 << 60),
+                (get_account_id_from_seed::<sr25519::Public>("Bob"), 1 << 60),
+            ],
+        },
     }
 }
+
+// /// Generate an account ID from seed.
+pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId32
+where
+    AccountId32: From<<TPublic::Pair as Pair>::Public>,
+{
+    // AccountId32::from(get_from_seed::<TPublic>(seed)).into_account()
+    AccountId32::from(get_from_seed::<TPublic>(seed))
+}
+
+pub fn get_endowed_accounts_with_balance() -> Vec<(AccountId32, u128)> {
+    let accounts: Vec<AccountId32> = vec![
+        get_account_id_from_seed::<sr25519::Public>("Alice"),
+        get_account_id_from_seed::<sr25519::Public>("Bob"),
+        get_account_id_from_seed::<sr25519::Public>("Charlie"),
+        get_account_id_from_seed::<sr25519::Public>("Dave"),
+        get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
+    ];
+    // @TODO genesis balance management
+    let accounts_with_balance: Vec<(AccountId32, u128)> = accounts.iter().cloned().map(|k| (k, 1 << 60)).collect();
+    // let accounts_with_balance: Vec<(AccountId32, u128)> = accounts.iter().cloned().map(|k| (k,
+    // 10_000)).collect();
+
+    accounts_with_balance
+}
+
